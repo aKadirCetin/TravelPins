@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(item.itemId == R.id.add_place){
-            startActivity(Intent(this, MainActivity::class.java).putExtra("info", "new"))
+            startActivity(Intent(this, MapsActivity::class.java).putExtra("info", "new"))
         }
         return super.onOptionsItemSelected(item)
     }
@@ -70,5 +70,10 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        compositeDisposable.clear()
     }
 }
