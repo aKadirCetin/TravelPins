@@ -6,13 +6,11 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.kadircetin.travelpins.databinding.RecyclerRowBinding
 import com.kadircetin.travelpins.model.Place
-import com.kadircetin.travelpins.view.MainActivity
 import com.kadircetin.travelpins.view.MapsActivity
 
 class PlaceAdapter(var placeList: List<Place>) : RecyclerView.Adapter<PlaceAdapter.PlaceHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlaceHolder {
-        val recyclerRowBinding: RecyclerRowBinding =
-            RecyclerRowBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val recyclerRowBinding: RecyclerRowBinding = RecyclerRowBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PlaceHolder(recyclerRowBinding)
     }
 
@@ -30,8 +28,6 @@ class PlaceAdapter(var placeList: List<Place>) : RecyclerView.Adapter<PlaceAdapt
     override fun getItemCount(): Int {
         return placeList.size
     }
-
-
     class PlaceHolder(val recyclerRowBinding: RecyclerRowBinding) :
         RecyclerView.ViewHolder(recyclerRowBinding.root)
 }

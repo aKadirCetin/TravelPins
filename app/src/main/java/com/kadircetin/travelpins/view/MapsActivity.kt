@@ -59,9 +59,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         mapFragment.getMapAsync(this)
         registerLauncher()
         sharedPreferences = this.getSharedPreferences("com.kadircetin.kotlinmaps", MODE_PRIVATE)
-        trackBoolean = false
-        selectedLatitude = 0.0
-        selectedLongitude = 0.0
 
         db = Room.databaseBuilder(applicationContext, PlaceDatabase::class.java, "Places").build()
         placeDao = db.placeDao()
@@ -98,11 +95,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
             if (ContextCompat.checkSelfPermission(this, accessFineLocation) != permissionGranted) {
                 //permission denied
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, accessFineLocation)) {
-                    Snackbar.make(
-                        binding.root,
-                        "Permission is needed for location!",
-                        Snackbar.LENGTH_INDEFINITE
-                    ).setAction("Give Permission") {
+                    Snackbar.make(binding.root,"Permission is needed for location!",Snackbar.LENGTH_INDEFINITE).setAction("Give Permission") {
                         //ask permission
                         permissionLauncher.launch(accessFineLocation)
                     }.show()
@@ -112,25 +105,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
                 }
             } else {
                 //permission granted
-                locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    0,
-                    0f,
-                    locationListener
-                )
-                val lastLocation =
-                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                if (lastLocation != null) {
-                    val lastUserLocation = LatLng(lastLocation.latitude, lastLocation.longitude)
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastUserLocation, 15f))
-                }
-                mMap.isMyLocationEnabled = true
+                showUserLocation()
             }
         } else {
             mMap.clear()
             placeFromMain = intent.getSerializableExtra("selectedPlace") as Place
-            placeFromMain.let { place ->
-                val latLng = LatLng(place!!.latitude, place.longitude)
+            placeFromMain?.let { place ->
+                val latLng = LatLng(place.latitude, place.longitude)
                 mMap.addMarker(MarkerOptions().position(latLng).title(place.name))
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
                 binding.placeText.setText(place.name)
@@ -141,28 +122,28 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     }
 
     private fun registerLauncher() {
-        permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { result ->
+        permissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { result ->
                 if (result) {
                     //permission granted
                     if (ContextCompat.checkSelfPermission(this,accessFineLocation) == permissionGranted) {
-                        locationManager.requestLocationUpdates(
-                            LocationManager.GPS_PROVIDER,
-                            0,
-                            0f,
-                            locationListener
-                        )
-                        val lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                        if (lastLocation != null) {
-                            val lastUserLocation = LatLng(lastLocation.latitude, lastLocation.longitude)
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastUserLocation,20f))
-                        }
-                        mMap.isMyLocationEnabled = true
+                        showUserLocation()
                     }
                 } else {
                     //permission denied
                     Toast.makeText(this@MapsActivity, "Permission needed!", Toast.LENGTH_LONG).show()
                 }
             }
+    }
+
+    private fun showUserLocation() {
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0f,locationListener )
+        val lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+        if (lastLocation != null) {
+            val lastUserLocation = LatLng(lastLocation.latitude, lastLocation.longitude)
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastUserLocation,15f))
+        }
+        mMap.isMyLocationEnabled = true
     }
 
     override fun onMapLongClick(location: LatLng) {
@@ -175,13 +156,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
 
     fun save(view: View) {
         if (selectedLatitude != null && selectedLongitude != null) {
-            val place =
-                Place(binding.placeText.text.toString(), selectedLatitude!!, selectedLongitude!!)
+            val place = Place(binding.placeText.text.toString(), selectedLatitude!!, selectedLongitude!!)
             compositeDisposable.add(
-                placeDao.insert(place)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(this::handleResponse)
+                         placeDao.insert(place)
+                         .subscribeOn(Schedulers.io())
+                         .observeOn(AndroidSchedulers.mainThread())
+                         .subscribe(this::handleResponse)
             )
         }
     }
@@ -189,7 +169,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     fun delete(view: View) {
         placeFromMain?.let { place ->
             compositeDisposable.add(
-                placeDao.delete(place)
+                    placeDao.delete(place)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(this::handleResponse)
@@ -198,12 +178,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     }
 
     private fun handleResponse() {
-        startActivity(
-            Intent(
-                this,
-                MainActivity::class.java
-            ).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        )
+        startActivity(Intent(this,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
     }
 
     override fun onDestroy() {
